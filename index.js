@@ -1,27 +1,17 @@
-var express    = require('express');
-var mysql      = require('mysql');
-var dbconfig   = require('./config/database.js');
-var connection = mysql.createConnection(dbconfig);
-
+var express = require('express');
 var app = express();
+var logger = require('morgan');
+var bodyParser = require('body-parser');
+var cors = require('cors');
 
-// configuration ===============================================================
-app.set('port', process.env.PORT || 3000);
+var router = require('./app/routes');
 
-app.get('/', function(req, res){
-  res.send('Root');
-});
+app.listen(process.env.PORT || 8080);
+console.log("App listening on port 8080");
 
-app.get('/persons', function(req, res){
+app.use(bodyParser.urlencoded({ extended: false })); // Parses urlencoded bodies
+app.use(bodyParser.json()); // Send JSON responses
+app.use(logger('dev')); // Log requests to API using morgan
+app.use(cors());
 
-  connection.query('SELECT * from disaster_behavior', function(err, rows) {
-    if(err) throw err;
-
-    console.log('The solution is: ', rows);
-    res.send(rows);
-  });
-});
-
-app.listen(app.get('port'), function () {
-  console.log('Express server listening on port ' + app.get('port'));
-});
+router(app);

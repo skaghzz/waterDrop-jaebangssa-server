@@ -1,17 +1,22 @@
 {
   "name": "waterDrop",
   "version": "1.0.0",
-  "description": "",
+  "description": "A Node.js app for alert behavior of heavy rain",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-	"start": "node index"
+    "start": "node index"
   },
   "keywords": [],
   "author": "namho Kim",
   "license": "ISC",
   "dependencies": {
+    "body-parser": "^1.17.2",
+    "cors": "^2.8.4",
     "express": "4.15.4",
-    "mysql": "2.14.1"
+    "morgan": "^1.8.2",
+    "mysql": "2.14.1",
+    "open-korean-text-node": "^2.0.0",
+    "request": "^2.81.0",
+    "string-similarity": "^1.2.0"
   }
 }
