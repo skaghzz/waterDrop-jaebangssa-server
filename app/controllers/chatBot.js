@@ -1,3 +1,11 @@
+const before_disaster = 0;
+const after_disaster = 1;
+const location_geograph_city = 0;
+const location_geograph_mountain = 1;
+const location_geograph_beach = 2;
+const location_building_in = 0;
+const location_building_out = 1;
+
 var dbconfig = require('../../config/database.js');
 var mysql = require('mysql');
 var connection = mysql.createConnection(dbconfig);
@@ -7,10 +15,7 @@ const APIAI_TOKEN = KEY.APIAI_TOKEN;
 const APIAI_SESSION_ID = KEY.APIAI_SESSION_ID;
 const apiai = require('apiai')(APIAI_TOKEN);
 
-
 var geocoder = require('geocoder');
-
-const OpenKoreanTextProcessor = require('open-korean-text-node').default;
 
 var Forecast = require('forecast');
 // Initialize
@@ -28,8 +33,9 @@ var forecast = new Forecast({
 exports.welcomeChatbot = function(req, res) {
 
     var nowAddress = '수영구'; //현재위치는 디바이스에서!
-    var text2 = '오늘 부산 중구 날씨'; //text도 디바이스에서!
-    var text = '호우 때 해안에서 행동요령 알려줘';
+    //var text = '비올때 위험지역'; //text도 디바이스에서!
+    var text = prompt("질문 입력하세요. ex) 비올때 위험지역 알려줘");
+    var text2 = '호우 때 해안에서 행동요령 알려줘';
 
     let apiaiReq = apiai.textRequest(text, {
         sessionId: APIAI_SESSION_ID
@@ -52,10 +58,55 @@ exports.welcomeChatbot = function(req, res) {
                 })
             }
 
+        } else if (apiAiResponse.result.metadata.intentName == '행동요령질문') {
+            console.log('행동요령질문이군');
+            console.log(apiAiResponse.result.parameters);
+            if (apiAiResponse.result.parameters.behavior_after_disaster == 'none' &&
+                apiAiResponse.result.parameters.behavior_keyword == 'none' &&
+                apiAiResponse.result.parameters.behavior_location_building == 'none' &&
+                apiAiResponse.result.parameters.behavior_location_geograph == 'none') {
+                res.send('다시 한번 더 말씀해 주세요.');
+            }
+            var query = "";
+            if (apiAiResponse.result.parameters.behavior_after_disaster != 'none') {
+                query = "SELECT behavior_content FROM DISASTER_BEHAVIOR WHERE behavior_after_disaster =";
+                if (apiAiResponse.result.parameters.behavior_after_disaster == '재해이후') {
+                    query += after_disaster;
+                } else {
+                    query += before_disaster;
+                }
 
+            } else if (apiAiResponse.result.parameters.behavior_keyword != 'none') {
+                query = 'SELECT behavior_content FROM DISASTER_BEHAVIOR WHERE behavior_keyword LIKE \'%' + apiAiResponse.result.parameters.behavior_keyword + '%\'';
+                console.log(query);
+            } else if (apiAiResponse.result.parameters.behavior_location_building != 'none') {
+                query = "SELECT behavior_content FROM DISASTER_BEHAVIOR WHERE behavior_after_disaster =";
+                if (apiAiResponse.result.parameters.behavior_location_building == '실내') {
+                    query += location_building_in;
+                } else if (apiAiResponse.result.parameters.behavior_location_building == '실외') {
+                    query += location_building_out;
+                }
+            } else if (apiAiResponse.result.parameters.behavior_location_geograph != 'none') {
+                query = "SELECT behavior_content FROM DISASTER_BEHAVIOR WHERE behavior_location_geograph =";
+                if (apiAiResponse.result.parameters.behavior_location_geograph == '농촌산간') {
+                    query += location_geograph_mountain;
+                } else if (apiAiResponse.result.parameters.behavior_location_geograph == '해안') {
+                    query += location_geograph_beach;
+                } else {
+                    query += location_geograph_beach;
+                }
+            }
+            query += "ORDER BY RAND() LIMIT 1";
+            connection.query(query, function(err, rows) {
+                if (err) throw err;
+
+                console.log('The solution is: ', rows);
+                res.send(rows);
+            });
 
         } else if (apiAiResponse.result.metadata.intentName == 'Default Fallback Intent') {
             console.log('모르겠음');
+            res.send(apiAiResponse.result.fulfillment.messages[0].speech);
         }
     });
 
@@ -85,8 +136,10 @@ var getWeather = function(address, date) {
     })
 }
 
+const OpenKoreanTextProcessor = require('open-korean-text-node').default;
 exports.chatbot = function(req, res) {
     //var inputMessage = req.query.message;
+    //var inputMessage = '호우 때 실내에서 어떻게 해야해?';
     var inputMessage = '호우 때 실내에서 어떻게 해야해?';
     OpenKoreanTextProcessor.normalize(inputMessage).then((normalizedMessage) => {
         OpenKoreanTextProcessor.tokenize(inputMessage).then((messageToken) => {
@@ -94,7 +147,6 @@ exports.chatbot = function(req, res) {
                 console.log(JSONmessageTokenArray);
                 var nounArray = getNounText(JSONmessageTokenArray);
             });
-
         });
     });
 }

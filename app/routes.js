@@ -24,3 +24,5 @@ module.exports = function(app) {
     app.use('/api', apiRoutes);
 
 }
+
+// localhost:8080/api/behavior/allBehavior
