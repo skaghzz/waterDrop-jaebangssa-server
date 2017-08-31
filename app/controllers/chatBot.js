@@ -136,6 +136,7 @@ var getWeather = function(address, date) {
     })
 }
 
+/*
 const OpenKoreanTextProcessor = require('open-korean-text-node').default;
 exports.chatbot = function(req, res) {
     //var inputMessage = req.query.message;
@@ -162,3 +163,4 @@ function getNounText(JSONmessageTokenArray) {
     //console.log(nounSpliter);
     return nounSpliter;
 }
+*/
