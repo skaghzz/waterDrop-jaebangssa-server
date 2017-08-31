@@ -17,8 +17,8 @@ module.exports = function(app) {
     apiRoutes.use('/chatbot', chatBotRoutes);
 
     //이거 나중에 post로 바까라
+    chatBotRoutes.get('/welcome', chatBotController.welcomeChatbot);
     chatBotRoutes.get('/', chatBotController.chatbot);
-    chatBotRoutes.get('/test', chatBotController.welcomeChatbot);
 
     // Set up routes
     app.use('/api', apiRoutes);
