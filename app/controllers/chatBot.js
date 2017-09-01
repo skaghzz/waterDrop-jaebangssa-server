@@ -193,7 +193,7 @@ exports.chatbot = function(req, res) {
                 outMessage.message = shelterMessage;
                 res.send(outMessage);
             });
-        } else if (apiAiResponse.result.metadata.intentName == 'Default Fallback Intent') {
+        } else {
             outMessage.type = 'none';
             outMessage.message = apiAiResponse.result.fulfillment.messages[0].speech;
             res.send(outMessage);
