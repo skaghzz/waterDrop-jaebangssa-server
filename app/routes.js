@@ -11,7 +11,8 @@ module.exports = function(app) {
     // behavior Routes
     apiRoutes.use('/behavior', behaviorRoutes);
 
-    behaviorRoutes.get('/allBehaviors', behaviorsController.allBehavior);
+    behaviorRoutes.get('/allBehaviors', behaviorsController.allBehaviors);
+    behaviorRoutes.get('/newBehavior', behaviorsController.newBehavior);
 
     // chatBot Routes
     apiRoutes.use('/chatbot', chatBotRoutes);

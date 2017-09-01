@@ -1,10 +1,10 @@
-const before_disaster = '0';
-const after_disaster = '1';
-const location_geograph_city = '0';
-const location_geograph_mountain = '1';
-const location_geograph_beach = '2';
-const location_building_in = '0';
-const location_building_out = '1';
+const BEFORE_DISASTER = '0';
+const AFTER_DISASTER = '1';
+const LOCATION_GEOGRAPH_CITY = '0';
+const LOCATION_GEOGRAPH_MOUNTAIN = '1';
+const LOCATION_GEOGRAPH_BEACH = '2';
+const LOCATION_BUILDING_IN = '0';
+const LOCATION_BUILDING_OUT = '1';
 
 var dbconfig = require('../../config/database.js');
 var mysql = require('mysql');
@@ -113,9 +113,9 @@ exports.chatbot = function(req, res) {
             if (apiAiResponse.result.parameters.behavior_after_disaster != 'none') {
                 query = "SELECT behavior_content FROM DISASTER_BEHAVIOR WHERE behavior_after_disaster =";
                 if (apiAiResponse.result.parameters.behavior_after_disaster == '재해이후') {
-                    query += after_disaster;
+                    query += AFTER_DISASTER;
                 } else {
-                    query += before_disaster;
+                    query += BEFORE_DISASTER;
                 }
 
             } else if (apiAiResponse.result.parameters.behavior_keyword != 'none') {
@@ -123,18 +123,18 @@ exports.chatbot = function(req, res) {
             } else if (apiAiResponse.result.parameters.behavior_location_building != 'none') {
                 query = "SELECT behavior_content FROM DISASTER_BEHAVIOR WHERE behavior_after_disaster =";
                 if (apiAiResponse.result.parameters.behavior_location_building == '실내') {
-                    query += location_building_in;
+                    query += LOCATION_BUILDING_IN;
                 } else if (apiAiResponse.result.parameters.behavior_location_building == '실외') {
-                    query += location_building_out;
+                    query += LOCATION_BUILDING_OUT;
                 }
             } else if (apiAiResponse.result.parameters.behavior_location_geograph != 'none') {
                 query = "SELECT behavior_content FROM DISASTER_BEHAVIOR WHERE behavior_location_geograph =";
                 if (apiAiResponse.result.parameters.behavior_location_geograph == '농촌산간') {
-                    query += location_geograph_mountain;
+                    query += LOCATION_GEOGRAPH_MOUNTAIN;
                 } else if (apiAiResponse.result.parameters.behavior_location_geograph == '해안') {
-                    query += location_geograph_beach;
+                    query += LOCATION_GEOGRAPH_BEACH;
                 } else {
-                    query += location_geograph_city;
+                    query += LOCATION_GEOGRAPH_CITY;
                 }
             }
             query += " ORDER BY RAND() LIMIT 3";
@@ -143,6 +143,28 @@ exports.chatbot = function(req, res) {
                 if (err) throw err;
 
                 console.log('The solution is: ', rows);
+                res.send(rows);
+            });
+
+        } else if (apiAiResponse.result.metadata.intentName == '대피소질문') {
+            var query = "";
+            query += 'set @orig_lat = 35.359951;\n';
+            query += 'set @orig_lon = 129.042415;\n';
+            query += 'set @dist = 4;\n';
+            query += 'set @lon1 = @orig_lon-@dist/abs(cos(radians(@orig_lat))*69);\n';
+            query += 'set @lon2 = @orig_lon+@dist/abs(cos(radians(@orig_lat))*69);\n';
+            query += 'set @lat1 = @orig_lat-(@dist/69);\n';
+            query += 'set @lat2 = @orig_lat+(@dist/69);\n';
+            query += 'SELECT * , 6371 * 2 * ASIN(SQRT(POWER(SIN((@orig_lat - abs(a.latitude)) * pi() / 180 / 2), 2) + COS(@orig_lat * pi() / 180) * COS(abs(a.latitude) * pi() / 180) * POWER(SIN((@orig_lon - a.longitude) * pi() / 180 / 2), 2))) as distance ';
+            query += 'FROM SHELTER as a '
+            query += 'WHERE a.longitude between @lon1 and @lon2 '
+            query += 'AND a.latitude between @lat1 and @lat2 '
+            query += 'having distance < @dist ORDER BY distance limit 5;';
+            connection.query(query, function(err, rows) {
+                if (err) throw err;
+                //res.send(rows);
+                //welcomeMessage += rows;
+                //console.log(rows);
                 res.send(rows);
             });
 
