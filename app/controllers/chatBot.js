@@ -147,15 +147,16 @@ exports.chatbot = function(req, res) {
             });
 
         } else if (apiAiResponse.result.metadata.intentName == '대피소질문') {
+            var shelterMessage = "";
             var query = "";
             query += 'set @orig_lat = 35.359951;\n';
             query += 'set @orig_lon = 129.042415;\n';
-            query += 'set @dist = 4;\n';
+            query += 'set @dist = 4000;\n';
             query += 'set @lon1 = @orig_lon-@dist/abs(cos(radians(@orig_lat))*69);\n';
             query += 'set @lon2 = @orig_lon+@dist/abs(cos(radians(@orig_lat))*69);\n';
             query += 'set @lat1 = @orig_lat-(@dist/69);\n';
             query += 'set @lat2 = @orig_lat+(@dist/69);\n';
-            query += 'SELECT * , 6371 * 2 * ASIN(SQRT(POWER(SIN((@orig_lat - abs(a.latitude)) * pi() / 180 / 2), 2) + COS(@orig_lat * pi() / 180) * COS(abs(a.latitude) * pi() / 180) * POWER(SIN((@orig_lon - a.longitude) * pi() / 180 / 2), 2))) as distance ';
+            query += 'SELECT * , 6371000 * 2 * ASIN(SQRT(POWER(SIN((@orig_lat - abs(a.latitude)) * pi() / 180 / 2), 2) + COS(@orig_lat * pi() / 180) * COS(abs(a.latitude) * pi() / 180) * POWER(SIN((@orig_lon - a.longitude) * pi() / 180 / 2), 2))) as distance ';
             query += 'FROM SHELTER as a '
             query += 'WHERE a.longitude between @lon1 and @lon2 '
             query += 'AND a.latitude between @lat1 and @lat2 '
@@ -165,9 +166,20 @@ exports.chatbot = function(req, res) {
                 //res.send(rows);
                 //welcomeMessage += rows;
                 //console.log(rows);
-                res.send(rows);
+                //res.send(rows[7][0]);
+                shelterMessage += "가장 가까운 대피소는 " + rows[7][0].shelter_name + "입니다.\n";
+                shelterMessage += "거리 : " + parseInt(rows[7][0].distance) + "m\n";
+                shelterMessage += "주소 : " + rows[7][0].address_doro + "\n";
+                shelterMessage += "전화번호 : " + rows[7][0].supervisor_telephone + "\n";
+                shelterMessage += "다음으로 가까운 대피소\n";
+                for (var idx = 1; idx <= 3; idx++) {
+                    shelterMessage += rows[7][idx].shelter_name + "\n";
+                    shelterMessage += "거리 : " + parseInt(rows[7][idx].distance) + "m\n";
+                    shelterMessage += "주소 : " + rows[7][idx].address_doro + "\n";
+                    shelterMessage += "전화번호 : " + rows[7][idx].supervisor_telephone + "\n";
+                }
+                res.send(shelterMessage);
             });
-
         } else if (apiAiResponse.result.metadata.intentName == 'Default Fallback Intent') {
             console.log('모르겠음');
             res.send(apiAiResponse.result.fulfillment.messages[0].speech);
