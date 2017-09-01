@@ -13,6 +13,7 @@ module.exports = function(app) {
     apiRoutes.use('/user', userRoutes);
 
     userRoutes.get('/addLocation', userController.locations);
+    userRoutes.get('/addcurr_Location', userController.curr_location);
     userRoutes.get('/saveToken', userController.saveToken);
 
     // behavior Routes
