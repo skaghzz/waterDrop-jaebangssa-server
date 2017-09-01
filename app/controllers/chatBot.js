@@ -31,10 +31,9 @@ var forecast = new Forecast({
 });
 
 exports.welcomeChatbot = function(req, res) {
-
-    var si = '강원도';
-    var gu = '양구군';
-    var dong = '남면';
+    var si = req.query.si;
+    var gu = req.query.gu;
+    var dong = req.query.dong;
 
     var welcomeMessage = "";
 
@@ -54,60 +53,72 @@ exports.welcomeChatbot = function(req, res) {
 
 }
 
-var getWeather = function(address, date) {
+var getWeather = function(latitude, longitude, date) {
     return new Promise((resolve, reject) => {
-        geocoder.geocode(address[(address.length - 1)], function(err, data) {
-            var lat = data.results[0].geometry.location.lat;
-            var lng = data.results[0].geometry.location.lng;
+        geocoder.reverseGeocode(latitude, longitude, function(err, address) {
             var unixTime = Date.parse(date) / 1000;
-            forecast.get([lat, lng, unixTime], function(err, weather) {
-                var weatherText = date + ", " + address[(address.length - 1)] +
-                    "의 날씨는 " + weather.currently.summary + ", " +
-                    "기온은 " + weather.currently.temperature + "℃, " +
-                    "체감 온도는 " + weather.currently.apparentTemperature + "℃ 입니다.\n";
-                console.log(weatherText);
+            forecast.get([latitude, longitude, unixTime], function(err, weather) {
+                //console.log(address.results[0].formatted_address);
+                var weatherText = date + ", " + address.results[0].formatted_address +
+                    "의 날씨 : " + weather.currently.summary + "\n" +
+                    "기온 : " + weather.currently.temperature + "℃\n" +
+                    "체감 온도 : " + weather.currently.apparentTemperature + "℃\n";
+                //console.log(weatherText);
                 resolve(weatherText);
             });
-        });
+        }, { language: 'ko' });
     })
 }
 
 exports.chatbot = function(req, res) {
+    var latitude = req.query.latitude;
+    var longitude = req.query.longitude;
+    //var latitude = 35.359951;
+    //var longitude = 129.042415;
+    var inputMessage = req.query.message;
 
-    var nowAddress = '수영구'; //현재위치는 디바이스에서!
-    //var text = '비올때 위험지역'; //text도 디바이스에서!
-    var text = req.query.message;
-    console.log(text);
+    //var nowAddress = '대한민국 양산시 삼성동 101 북정네오파트아파트'; //현재위치는 디바이스에서!
 
-    let apiaiReq = apiai.textRequest(text, {
+    let apiaiReq = apiai.textRequest(inputMessage, {
         sessionId: APIAI_SESSION_ID
     });
 
     apiaiReq.on('response', (apiAiResponse) => {
-        console.log(apiAiResponse);
+        //console.log(apiAiResponse);
+        var outMessage = {
+            type: "",
+            message: ""
+        };
         if (apiAiResponse.result.metadata.intentName == '날씨질문') {
+            outMessage.type = "weather";
             if (apiAiResponse.result.parameters.address == '') {
-                getWeather(nowAddress, apiAiResponse.result.parameters.date).then(function(r) {
-                    res.send(r);
+                getWeather(latitude, longitude, apiAiResponse.result.parameters.date).then(function(r) {
+                    outMessage.message = r;
+                    res.send(outMessage);
                 })
             } else if (apiAiResponse.result.parameters.date == '') {
-                getWeather(apiAiResponse.result.parameters.address, new Date()).then(function(r) {
-                    res.send(r);
-                })
+                geocoder.geocode(apiAiResponse.result.parameters.address[(apiAiResponse.result.parameters.address.length - 1)], function(err, data) {
+                    getWeather(data.results[0].geometry.location.lat, data.results[0].geometry.location.lng, new Date()).then(function(r) {
+                        outMessage.message = r;
+                        res.send(outMessage);
+                    });
+                });
             } else {
-                getWeather(apiAiResponse.result.parameters.address, apiAiResponse.result.parameters.date).then(function(r) {
-                    res.send(r);
-                })
+                geocoder.geocode(apiAiResponse.result.parameters.address[(apiAiResponse.result.parameters.address.length - 1)], function(err, data) {
+                    getWeather(data.results[0].geometry.location.lat, data.results[0].geometry.location.lng, apiAiResponse.result.parameters.date).then(function(r) {
+                        outMessage.message = r;
+                        res.send(outMessage);
+                    });
+                });
             }
-
         } else if (apiAiResponse.result.metadata.intentName == '행동요령질문') {
-            console.log('행동요령질문이군');
-            console.log(apiAiResponse.result.parameters);
+            outMessage.type = "behavior";
             if (apiAiResponse.result.parameters.behavior_after_disaster == 'none' &&
                 apiAiResponse.result.parameters.behavior_keyword == 'none' &&
                 apiAiResponse.result.parameters.behavior_location_building == 'none' &&
                 apiAiResponse.result.parameters.behavior_location_geograph == 'none') {
-                res.send('다시 한번 더 말씀해 주세요.');
+                outMessage.message = "다시 한번 더 말씀해 주세요.";
+                res.send(outMessage);
             }
             var query = "";
             if (apiAiResponse.result.parameters.behavior_after_disaster != 'none') {
@@ -138,15 +149,16 @@ exports.chatbot = function(req, res) {
                 }
             }
             query += " ORDER BY RAND() LIMIT 3";
-            console.log(query);
             connection.query(query, function(err, rows) {
                 if (err) throw err;
 
-                console.log('The solution is: ', rows);
-                res.send(rows);
+                //console.log('The solution is: ', rows);
+                outMessage.message = rows;
+                res.send(outMessage);
             });
 
         } else if (apiAiResponse.result.metadata.intentName == '대피소질문') {
+            outMessage.type = 'shelter';
             var shelterMessage = "";
             var query = "";
             query += 'set @orig_lat = 35.359951;\n';
@@ -178,11 +190,13 @@ exports.chatbot = function(req, res) {
                     shelterMessage += "주소 : " + rows[7][idx].address_doro + "\n";
                     shelterMessage += "전화번호 : " + rows[7][idx].supervisor_telephone + "\n";
                 }
-                res.send(shelterMessage);
+                outMessage.message = shelterMessage;
+                res.send(outMessage);
             });
         } else if (apiAiResponse.result.metadata.intentName == 'Default Fallback Intent') {
-            console.log('모르겠음');
-            res.send(apiAiResponse.result.fulfillment.messages[0].speech);
+            outMessage.type = 'none';
+            outMessage.message = apiAiResponse.result.fulfillment.messages[0].speech;
+            res.send(outMessage);
         }
     });
 
@@ -193,32 +207,3 @@ exports.chatbot = function(req, res) {
     apiaiReq.end();
     //res.send('This is chatbot Server');
 }
-
-/*
-const OpenKoreanTextProcessor = require('open-korean-text-node').default;
-exports.chatbot = function(req, res) {
-    //var inputMessage = req.query.message;
-    //var inputMessage = '호우 때 실내에서 어떻게 해야해?';
-    var inputMessage = '호우 때 실내에서 어떻게 해야해?';
-    OpenKoreanTextProcessor.normalize(inputMessage).then((normalizedMessage) => {
-        OpenKoreanTextProcessor.tokenize(inputMessage).then((messageToken) => {
-            OpenKoreanTextProcessor.tokensToJsonArray(messageToken).then((JSONmessageTokenArray) => {
-                console.log(JSONmessageTokenArray);
-                var nounArray = getNounText(JSONmessageTokenArray);
-            });
-        });
-    });
-}
-
-
-function getNounText(JSONmessageTokenArray) {
-    var nounSpliter = [];
-    for (var idx = 0; idx < JSONmessageTokenArray.length; idx++) {
-        if (JSONmessageTokenArray[idx].pos == 'Noun') {
-            nounSpliter.push(JSONmessageTokenArray[idx].text);
-        }
-    }
-    //console.log(nounSpliter);
-    return nounSpliter;
-}
-*/
