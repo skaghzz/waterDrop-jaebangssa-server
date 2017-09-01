@@ -1,4 +1,4 @@
 node_modules
 config
-npm-debug.log
+npm-debug.log.*
 example

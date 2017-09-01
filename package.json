@@ -10,13 +10,14 @@
   "author": "namho Kim",
   "license": "ISC",
   "dependencies": {
+    "apiai": "^4.0.3",
     "body-parser": "^1.17.2",
+    "botkit": "^0.5.7",
     "cors": "^2.8.4",
     "express": "4.15.4",
+    "forecast": "^0.3.2",
+    "geocoder": "^0.2.3",
     "morgan": "^1.8.2",
-    "mysql": "2.14.1",
-    "open-korean-text-node": "^2.0.0",
-    "request": "^2.81.0",
-    "string-similarity": "^1.2.0"
+    "mysql": "2.14.1"
   }
 }
