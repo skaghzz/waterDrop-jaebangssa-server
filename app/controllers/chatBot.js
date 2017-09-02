@@ -37,19 +37,21 @@ exports.welcomeChatbot = function(req, res) {
 
     var welcomeMessage = "";
 
-    getWeather(dong, new Date()).then(function(r) {
-        welcomeMessage += r;
-        var query = "SELECT isFrequent FROM frequent_flooding WHERE si = \"" + si + "\" && gu = \"" + gu + "\" && dong = \"" + dong + "\"";
-        connection.query(query, function(err, rows) {
-            if (err) throw err;
-            //res.send(rows);
-            //welcomeMessage += rows;
-            if (rows[0].isFrequent == 1) {
-                welcomeMessage += "현재 계신 " + si + " " + gu + " " + dong + "은(는) 상습 침수 지역입니다.";
-            }
-            res.send(welcomeMessage);
+    geocoder.geocode(dong, function(err, data) {
+        console.log(data);
+        getWeather(data.results[0].geometry.location.lat, data.results[0].geometry.location.lng, new Date()).then(function(r) {
+            welcomeMessage += r;
+            var query = "SELECT isFrequent FROM frequent_flooding WHERE si = \"" + si + "\" && gu = \"" + gu + "\" && dong = \"" + dong + "\"";
+            connection.query(query, function(err, rows) {
+                if (err) throw err;
+                if (rows[0].isFrequent == 1) {
+                    welcomeMessage += "현재 계신 " + si + " " + gu + " " + dong + "은(는) 상습 침수 지역입니다.";
+                }
+                res.send(welcomeMessage);
+            });
         });
     });
+
 
 }
 
@@ -161,8 +163,8 @@ exports.chatbot = function(req, res) {
             outMessage.type = 'shelter';
             var shelterMessage = "";
             var query = "";
-            query += 'set @orig_lat = 35.359951;\n';
-            query += 'set @orig_lon = 129.042415;\n';
+            query += 'set @orig_lat = ' + latitude + ';\n';
+            query += 'set @orig_lon = ' + longitude + ';\n';
             query += 'set @dist = 4000;\n';
             query += 'set @lon1 = @orig_lon-@dist/abs(cos(radians(@orig_lat))*69);\n';
             query += 'set @lon2 = @orig_lon+@dist/abs(cos(radians(@orig_lat))*69);\n';
