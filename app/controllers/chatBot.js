@@ -163,8 +163,8 @@ exports.chatbot = function(req, res) {
             outMessage.type = 'shelter';
             var shelterMessage = "";
             var query = "";
-            query += 'set @orig_lat = 35.359951;\n';
-            query += 'set @orig_lon = 129.042415;\n';
+            query += 'set @orig_lat = ' + latitude + ';\n';
+            query += 'set @orig_lon = ' + longitude + ';\n';
             query += 'set @dist = 4000;\n';
             query += 'set @lon1 = @orig_lon-@dist/abs(cos(radians(@orig_lat))*69);\n';
             query += 'set @lon2 = @orig_lon+@dist/abs(cos(radians(@orig_lat))*69);\n';
