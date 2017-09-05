@@ -8,14 +8,14 @@ npm start
 
 Screenshots
 ===
-![alt text](./application_Image/아이콘1.jpg "아이콘1")
-![alt text](./application_Image/스플래쉬이미지.jpg "스플래쉬이미지")
-![alt text](./application_Image/체크리스트(체크전).jpg "체크리스트(체크전)")
-![alt text](./application_Image/체크리스트(체크후).jpg "체크리스트(체크후)")
-![alt text](./application_Image/체크리스트 목록관리.jpg "체크리스트 목록관리")
-![alt text](./application_Image/나만의 체크리스트 만들기.jpg "나만의 체크리스트 만들기")
+![alt text](./application_Info/아이콘1.jpg "아이콘1")
+![alt text](./application_Info/스플래쉬이미지.jpg "스플래쉬이미지")
+![alt text](./application_Info/체크리스트(체크전).jpg "체크리스트(체크전)")
+![alt text](./application_Info/체크리스트(체크후).jpg "체크리스트(체크후)")
+![alt text](./application_Info/체크리스트 목록 관리.jpg "체크리스트 목록 관리")
+![alt text](./application_Info/나만의 체크리스트 만들기.jpg "나만의 체크리스트 만들기")
 
-![alt text](./application_Image/관심지역설정1.jpg "관심지역설정1")
-![alt text](./application_Image/관심지역설정2.jpg "관심지역설정2")
-![alt text](./application_Image/안전요령 챗봇 방울이(대피소).jpg "안전요령 챗봇 방울이(대피소)")
-![alt text](./application_Image/안전요령 챗봇 방울이(날씨).jpg "안전요령 챗봇 방울이(날씨)")
+![alt text](./application_Info/관심지역설정1.jpg "관심지역설정1")
+![alt text](./application_Info/관심지역설정2.jpg "관심지역설정2")
+![alt text](./application_Info/안전요령 챗봇 방울이(대피소).jpg "안전요령 챗봇 방울이(대피소)")
+![alt text](./application_Info/안전요령 챗봇 방울이(날씨).jpg "안전요령 챗봇 방울이(날씨)")
