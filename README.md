@@ -9,3 +9,5 @@ npm start
 Screenshots
 ===
 ![alt text](./application_Image/아이콘.jpg "아이콘")
+![alt text](./application_Image/스플래쉬이미지.jpg "스플래쉬이미지")
+![alt text](./application_Image/체크리스트(체크전).jpg "체크리스트(체크전)")
